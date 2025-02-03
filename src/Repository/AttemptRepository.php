@@ -51,27 +51,33 @@ class AttemptRepository
 	 * @param Attempt $attempt
 	 * @return bool
 	 */
-	public function save(Attempt $attempt): bool
+	public function save(array $data): int|bool
 	{
-		if ($attempt->id) {
+		// Проверяем обязательные поля
+		if (empty($data['date']) || empty($data['taskId'])) {
+			throw new InvalidArgumentException('Необходимые поля "date" и "taskId" отсутствуют');
+		}
+
+		if (!empty($data['id'])) {
 			// Обновление существующего подхода
 			$sql = "UPDATE attempts SET date = :date, task_id = :taskId WHERE id = :id";
 			$params = [
-				':id' => $attempt->id,
-				':date' => $attempt->date,
-				':taskId' => $attempt->taskId,
+				':id' => $data['id'],
+				':date' => $data['date'],
+				':taskId' => $data['taskId'],
 			];
 		} else {
 			// Добавление нового подхода
 			$sql = "INSERT INTO attempts (date, task_id) VALUES (:date, :taskId)";
 			$params = [
-				':date' => $attempt->date,
-				':taskId' => $attempt->taskId,
+				':date' => $data['date'],
+				':taskId' => $data['taskId'],
 			];
 		}
 
 		$stmt = $this->pdo->prepare($sql);
-		return $stmt->execute($params);
+		$stmt->execute($params);
+		return (int) $this->pdo->lastInsertId(); // Возвращаем ID новой записи
 	}
 
 	/**
@@ -117,4 +123,5 @@ class AttemptRepository
 		$stmt->execute([':taskId' => $taskId]);
 		return (int) $stmt->fetchColumn();
 	}
+
 }

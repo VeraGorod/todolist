@@ -32,4 +32,33 @@ class TaskRepository
 		]);
 		return (int) $this->pdo->lastInsertId();
 	}
+
+	public function update(int $id, array $data): bool {
+		$sql = "UPDATE tasks SET 
+        name = :name,
+        status = :status,
+        project_id = :projectId,
+        domains = :domains,
+        color = :color,
+        target_attempts = :targetAttempts,
+        time_per_attempt = :timePerAttempt
+        WHERE id = :id";
+		$stmt = $this->pdo->prepare($sql);
+		return $stmt->execute([
+			':id' => $id,
+			':name' => $data['name'],
+			':status' => $data['status'],
+			':projectId' => $data['projectId'] !== null ? $data['projectId'] : null,
+			':domains' => json_encode($data['domains']),
+			':color' => $data['color'],
+			':targetAttempts' => $data['targetAttempts'],
+			':timePerAttempt' => $data['timePerAttempt'],
+		]);
+	}
+
+	public function findById(int $id): ?array {
+		$stmt = $this->pdo->prepare("SELECT * FROM tasks WHERE id = :id");
+		$stmt->execute([':id' => $id]);
+		return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+	}
 }

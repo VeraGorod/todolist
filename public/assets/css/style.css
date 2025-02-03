@@ -33,3 +33,18 @@ body {
     color: #666;
     font-size: 0.9em;
 }
+
+/* Отступы между элементами списка */
+.list-group-item {
+    margin-bottom: 5px; /* Отступ снизу */
+    padding: 10px; /* Внутренние отступы */
+    border-radius: 8px; /* Скругление углов */
+}
+
+/* Увеличение отступов для экранов больше 840px */
+@media (min-width: 840px) {
+    .list-group-item {
+        margin-bottom: 8px;
+        padding: 10px;
+    }
+}

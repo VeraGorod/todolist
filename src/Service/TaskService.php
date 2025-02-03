@@ -2,11 +2,16 @@
 namespace App\Service;
 
 use App\Entity\Task;
+use App\Repository\AttemptRepository;
 use App\Repository\TaskRepository;
 
 class TaskService
 {
-	public function __construct(private TaskRepository $repository) {}
+	public function __construct(TaskRepository $taskRepository, AttemptRepository $attemptRepository)
+	{
+		$this->taskRepository = $taskRepository;
+		$this->attemptRepository = $attemptRepository;
+	}
 
 	/**
 	 * Получить все задачи.
@@ -15,7 +20,7 @@ class TaskService
 	 */
 	public function getAllTasks(): array
 	{
-		return $this->repository->findAll();
+		return $this->taskRepository->findAll();
 	}
 
 	/**
@@ -26,7 +31,7 @@ class TaskService
 	 */
 	public function getFilteredTasks(array $filters): array
 	{
-		return $this->repository->findByFilters($filters);
+		return $this->taskRepository->findByFilters($filters);
 	}
 
 	/**
@@ -63,7 +68,7 @@ class TaskService
 	 */
 	public function updateTask(int $id, array $data): bool
 	{
-		$task = $this->repository->findById($id);
+		$task = $this->taskRepository->findById($id);
 		if (!$task) {
 			return false;
 		}
@@ -80,7 +85,7 @@ class TaskService
 		$task->domains = $data['domains'] ?? $task->domains;
 		$task->externalLink = $data['externalLink'] ?? $task->externalLink;
 
-		return $this->repository->save($task);
+		return $this->taskRepository->save($task);
 	}
 
 	/**
@@ -91,6 +96,22 @@ class TaskService
 	 */
 	public function deleteTask(int $id): bool
 	{
-		return $this->repository->delete($id);
+		return $this->taskRepository->delete($id);
+	}
+
+	public function getTasksWithAttempts(): array
+	{
+		$tasks = $this->taskRepository->findAll();
+		foreach ($tasks as &$task) {
+			// Получаем количество сделанных подходов
+			$task['attempts_count'] = $this->attemptRepository->countByTaskId($task['id']);
+
+			// Вычисляем процент выполнения
+			$targetAttempts = $task['target_attempts'];
+			$task['progress_percent'] = $targetAttempts > 0
+				? round(($task['attempts_count'] / $targetAttempts) * 100, 2)
+				: 0;
+		}
+		return $tasks;
 	}
 }

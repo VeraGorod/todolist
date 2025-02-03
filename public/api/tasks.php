@@ -13,6 +13,25 @@ $config = require __DIR__ . '/../../config/config.php';
 $database = new Database($config['database']['path']);
 $repository = new TaskRepository($database->getPdo());
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+	$taskId = $_GET['id'] ?? null;
+	if (!$taskId) {
+		http_response_code(400);
+		echo json_encode(['error' => 'ID задачи не указан']);
+		exit;
+	}
+	$task = $repository->findById((int)$taskId);
+	if (!$task) {
+		http_response_code(404);
+		echo json_encode(['error' => 'Задача не найдена']);
+		exit;
+	}
+	// Преобразуем JSON-поля обратно в массивы
+	$task['domains'] = json_decode($task['domains'], true);
+	echo json_encode($task);
+	exit;
+}
+
 // Обработка POST-запроса
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	$data = json_decode(file_get_contents('php://input'), true);
@@ -42,6 +61,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		'id' => $taskId,
 		'name' => $data['name'],
 	]);
+	exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+	$data = json_decode(file_get_contents('php://input'), true);
+	$taskId = intval($data['id']) ?? null;
+
+	if (!$taskId) {
+		http_response_code(400);
+		echo json_encode(['error' => 'ID задачи не указан']);
+		exit;
+	}
+
+	$updated = $repository->update($taskId, [
+		'name' => $data['name'],
+		'status' => $data['status'],
+		'projectId' => $data['projectId'] !== null ? (int) $data['projectId'] : null,
+		'domains' => json_encode($data['domains'] ?? []),
+		'color' => $data['color'] ?? 'default',
+		'targetAttempts' => $data['targetAttempts'] ?? 1,
+		'timePerAttempt' => $data['timePerAttempt'] ?? 0,
+	]);
+
+	if ($updated) {
+		echo json_encode($repository->findById($taskId));
+	} else {
+		http_response_code(500);
+		echo json_encode(['error' => 'Ошибка при обновлении задачи']);
+	}
 	exit;
 }
 

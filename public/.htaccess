@@ -1,7 +1,15 @@
 RewriteEngine On
 
+# Перенаправление /api/tasks/:id на /api/tasks.php?id=:id
+RewriteRule ^api/tasks/([0-9]+)$ api/tasks.php?id=$1 [L]
+
+# Перенаправление /api/projects/:id на /api/projects.php?id=$1
+RewriteRule ^api/projects/([0-9]+)$ api/projects.php?id=$1 [L]
+
 # Перенаправление /api/tasks на /api/tasks.php
 RewriteRule ^api/tasks$ api/tasks.php [L]
 
 # Перенаправление /api/projects на /api/projects.php
 RewriteRule ^api/projects$ api/projects.php [L]
+
+RewriteRule ^api/attempts$ api/attempts.php [L]
