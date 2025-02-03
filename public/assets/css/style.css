@@ -1,0 +1,35 @@
+/* Базовые стили */
+body {
+    font-family: Arial, sans-serif;
+}
+.task, .project {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+/* Отступы для экранов меньше 840px */
+@media (max-width: 840px) {
+    .container-md {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+/* Стили для списков */
+.task, .project {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.task-name, .project-name {
+    font-weight: bold;
+}
+
+.task-status, .project-level {
+    color: #666;
+    font-size: 0.9em;
+}

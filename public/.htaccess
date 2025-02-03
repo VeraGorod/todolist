@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Перенаправление /api/tasks на /api/tasks.php
+RewriteRule ^api/tasks$ api/tasks.php [L]
+
+# Перенаправление /api/projects на /api/projects.php
+RewriteRule ^api/projects$ api/projects.php [L]
