@@ -13,3 +13,5 @@ RewriteRule ^api/tasks$ api/tasks.php [L]
 RewriteRule ^api/projects$ api/projects.php [L]
 
 RewriteRule ^api/attempts$ api/attempts.php [L]
+
+RewriteRule ^settings$ settings.php [L]

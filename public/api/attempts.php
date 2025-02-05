@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use App\Database;
 use App\Repository\AttemptRepository;
+use App\Repository\TaskRepository;
 
 $config = require __DIR__ . '/../../config/config.php';
 $database = new Database($config['database']['path']);
@@ -38,12 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		: 0;
 
 	// Возвращаем данные о задаче
+	$projectService = new \App\Service\ProjectService(new \App\Repository\ProjectRepository($database->getPdo()), new TaskRepository($database->getPdo()), new \App\Repository\AttemptRepository($database->getPdo()));
+	$stats = $projectService->recalculateAllStats();
 	echo json_encode([
+		'attempt' => $repository->findById($attemptId),
+		'stats' => $stats,
+	]);
+	/*echo json_encode([
 		'id' => $taskId,
 		'attempts_count' => $attemptsCount,
 		'target_attempts' => $targetAttempts,
 		'progress_percent' => $progressPercent,
-	]);
+	]);*/
 	exit;
 }
 

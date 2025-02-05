@@ -23,12 +23,28 @@ $taskRepository = new TaskRepository($pdo);
 $attemptRepository = new AttemptRepository($pdo);
 
 // Initialize services
-$projectService = new ProjectService($projectRepository);
+$projectService = new \App\Service\ProjectService($projectRepository, $taskRepository, $attemptRepository);
 $taskService = new TaskService($taskRepository, $attemptRepository); // Inject AttemptRepository here
 
 // Получение данных
-$projects = $projectService->getAllProjects();
+$projects = $projectService->getAllProjectsWithProgress();
 $tasks = $taskService->getTasksWithAttempts();
+
+// Добавляем прогресс к каждому проекту
+foreach ($projects as &$project) {
+	$project['progress_percent'] = $projectService->calculateProjectProgress($project);
+}
+
+// Общая статистика
+$totalProjectStats = $projectService->getTotalProjectStats();
+$domainStats = $projectService->getDomainStats();
+$todayStats = $taskService->getTodayStats();
+$todayDomainStats = $taskService->getTodayDomainStats();
+
+// Общая статистика
+$totalProgressPercent = $totalProjectStats['progress_percent'];
+// Статистика по сферам
+$domainStats = $projectService->getDomainStatsWithPercentages();
 
 // Подключение шаблонов
 ob_start();

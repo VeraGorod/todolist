@@ -48,3 +48,45 @@ body {
         padding: 10px;
     }
 }
+
+.list-group-item > * {
+    position: relative;
+}
+/* Стили для контейнера прогресса */
+.progress-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%; /* Задаем полную ширину родителя */
+}
+
+/* Стили для полосы прогресса */
+.progress-bar {
+    height: 100%;
+    background-color: rgba(0, 255, 0, 0.2);
+    transition: width 0.3s ease; /* Плавная анимация изменения ширины */
+}
+
+/* Стили для визуализации прогресса */
+/* Стили для визуализации прогресса */
+.square {
+    width: 10px; /* Увеличиваем размер квадратиков */
+    height: 10px;
+    margin: 2px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Адаптивная сетка для сфер */
+.domain-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 колонки на больших экранах */
+    gap: 20px;
+}
+
+@media (max-width: 840px) {
+    .domain-stats {
+        grid-template-columns: repeat(2, 1fr); /* 2 колонки на планшетах и меньше */
+    }
+}

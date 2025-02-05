@@ -14,10 +14,17 @@
         <!-- Список проектов -->
         <div id="projects-list">
 			<?php foreach ($projects as $project): ?>
-                <div class="list-group-item d-flex justify-content-between align-items-center" data-id="<?= htmlspecialchars($project['id']) ?>">
+                <div class="list-group-item project-item d-flex justify-content-between align-items-center" data-id="<?= htmlspecialchars($project['id']) ?>">
+                    <!-- Прогресс -->
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: <?= htmlspecialchars($project['progress_percent']) ?>%;"></div>
+                    </div>
                     <div>
                         <strong class="project-name"><?= htmlspecialchars($project['name']) ?></strong>
-                        <small class="project-level text-muted"><?= htmlspecialchars($project['level']) ?></small>
+                        <!-- Часы (факт / план) -->
+                        <small class="project-hours text-muted">
+							<?= htmlspecialchars($project['total_time_spent']) ?>/<?= htmlspecialchars($project['hours']) ?> ч
+                        </small>
                     </div>
                     <button class="btn btn-outline-secondary btn-sm edit-project-btn" data-bs-toggle="modal" data-bs-target="#edit-project-modal" data-id="<?= htmlspecialchars($project['id']) ?>">
                         <i class="bi bi-pencil"></i>

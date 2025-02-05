@@ -61,4 +61,17 @@ class TaskRepository
 		$stmt->execute([':id' => $id]);
 		return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 	}
+
+	/**
+	 * Получить задачи по ID проекта.
+	 *
+	 * @param int $projectId
+	 * @return array
+	 */
+	public function findByProjectId(int $projectId): array
+	{
+		$stmt = $this->pdo->prepare("SELECT * FROM tasks WHERE project_id = :projectId");
+		$stmt->execute([':projectId' => $projectId]);
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
 }

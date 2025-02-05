@@ -14,7 +14,11 @@
         <!-- Список дел -->
         <div id="tasks-list">
 			<?php foreach ($tasks as $task): ?>
-                <div class="list-group-item d-flex justify-content-between align-items-center position-relative" data-id="<?= htmlspecialchars($task['id']) ?>">
+                <div class="list-group-item task-item d-flex justify-content-between align-items-center position-relative" data-id="<?= htmlspecialchars($task['id']) ?>">
+                    <!-- Прогресс -->
+                    <div class="progress-container position-absolute top-0 start-0 bottom-0">
+                        <div class="progress-bar" style="width: <?= htmlspecialchars($task['progress_percent']) ?>%;"></div>
+                    </div>
                     <!-- Кнопка добавления подхода -->
                     <button class="btn btn-success btn-sm add-attempt-btn me-2" data-id="<?= htmlspecialchars($task['id']) ?>">
                         <i class="bi bi-plus"></i>
@@ -23,10 +27,7 @@
                     <!-- Название дела -->
                     <strong class="task-name"><?= htmlspecialchars($task['name']) ?></strong>
 
-                    <!-- Прогресс -->
-                    <div class="progress-container position-absolute top-0 start-0 bottom-0">
-                        <div class="progress-bar" style="width: <?= htmlspecialchars($task['progress_percent']) ?>%;"></div>
-                    </div>
+
 
                     <!-- Количество подходов / цель -->
                     <span class="text-muted attempts-count">

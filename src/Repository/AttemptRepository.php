@@ -124,4 +124,17 @@ class AttemptRepository
 		return (int) $stmt->fetchColumn();
 	}
 
+	/**
+	 * Получить подходы по дате.
+	 *
+	 * @param string $date
+	 * @return array
+	 */
+	public function findByDate(string $date): array
+	{
+		$stmt = $this->pdo->prepare("SELECT * FROM attempts WHERE date LIKE :date");
+		$stmt->execute([':date' => "$date%"]);
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
+
 }

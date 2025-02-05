@@ -85,7 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 	]);
 
 	if ($updated) {
-		echo json_encode($repository->findById($taskId));
+		$task = $repository->findById($taskId);
+		$taskService = new \App\Service\TaskService($repository, new \App\Repository\AttemptRepository($database->getPdo()));
+		$task['progress_percent'] = $taskService->calculateTaskProgress($task);
+		$projectService = new \App\Service\ProjectService(new \App\Repository\ProjectRepository($database->getPdo()), new TaskRepository($database->getPdo()), new \App\Repository\AttemptRepository($database->getPdo()));
+		$stats = $projectService->recalculateAllStats();
+		echo json_encode([
+			'task' => $task,
+			'stats' => $stats,
+		]);
+		echo json_encode($task);
 	} else {
 		http_response_code(500);
 		echo json_encode(['error' => 'Ошибка при обновлении задачи']);

@@ -114,4 +114,87 @@ class TaskService
 		}
 		return $tasks;
 	}
+
+	/**
+	 * Получить процент выполнения задачи.
+	 *
+	 * @param array $task
+	 * @return float
+	 */
+	public function calculateTaskProgress(array $task): float
+	{
+		$attemptsCount = $this->attemptRepository->countByTaskId($task['id']);
+		$targetAttempts = $task['target_attempts'];
+
+		return $targetAttempts > 0
+			? round(($attemptsCount / $targetAttempts) * 100, 2)
+			: 0;
+	}
+
+	/**
+	 * Получить статистику за сегодня.
+	 *
+	 * @return array
+	 */
+	public function getTodayStats(): array
+	{
+		$today = date('Y-m-d');
+		$attemptsToday = $this->attemptRepository->findByDate($today);
+		$totalTimeToday = 0;
+
+		foreach ($attemptsToday as $attempt) {
+			$task = $this->taskRepository->findById($attempt['task_id']);
+			$totalTimeToday += $task['time_per_attempt'];
+		}
+
+		$totalTimeTodayInHours = round($totalTimeToday / 60, 1);
+
+		return [
+			'time_today' => $totalTimeTodayInHours,
+			'progress_percent' => $totalTimeTodayInHours > 0 ? 100 : 0,
+		];
+	}
+
+	/**
+	 * Получить статистику по сферам за сегодня.
+	 *
+	 * @return array
+	 */
+	public function getTodayDomainStats(): array
+	{
+		$today = date('Y-m-d');
+		$domains = ['work', 'health', 'family', 'personal_growth'];
+		$stats = [];
+
+		foreach ($domains as $domain) {
+			$tasksInDomain = array_filter($this->taskRepository->findAll(), function ($task) use ($domain) {
+				$domains = trim($task['domains'], '"'); // Удаляем внешние кавычки
+				$domains = stripslashes($domains); // Удаляем лишние слэши
+				$decodedDomains = json_decode($domains, true);
+				// Проверяем, что результат декодирования — это массив
+				if (!is_array($decodedDomains)) {
+					return false;
+				}
+				return in_array($domain, $decodedDomains);
+			});
+
+			$totalTimeToday = 0;
+
+			foreach ($tasksInDomain as $task) {
+				$attemptsToday = array_filter($this->attemptRepository->findByTaskId($task['id']), function ($attempt) use ($today) {
+					return substr($attempt['date'], 0, 10) === $today;
+				});
+
+				$totalTimeToday += count($attemptsToday) * $task['time_per_attempt'];
+			}
+
+			$totalTimeTodayInHours = round($totalTimeToday / 60, 1);
+			$stats[$domain] = [
+				'time_today' => $totalTimeTodayInHours,
+				'progress_percent' => $totalTimeTodayInHours > 0 ? 100 : 0,
+			];
+		}
+
+		return $stats;
+	}
 }

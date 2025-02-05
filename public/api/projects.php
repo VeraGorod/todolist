@@ -5,6 +5,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use App\Repository\ProjectRepository;
 use App\Database;
+use App\Repository\TaskRepository;
 
 header('Content-Type: application/json');
 
@@ -81,7 +82,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 	]);
 
 	if ($updated) {
-		echo json_encode($repository->findById($projectId));
+		$projectService = new \App\Service\ProjectService($repository, new TaskRepository($database->getPdo()), new \App\Repository\AttemptRepository($database->getPdo()));
+		$project = $repository->findById($projectId);
+		$project['progress_percent'] = $projectService->calculateProjectProgress($project);
+		// Вычисляем фактическое время
+		$project['total_time_spent'] = $projectService->calculateTotalTimeSpent($projectId);
+
+		// Вычисляем прогресс
+		$project['progress_percent'] = $projectService->calculateProjectProgress($project);
+
+		$totalTimeSpent = $projectService->calculateTotalTimeSpent($projectId);
+
+		$stats = $projectService->recalculateAllStats();
+		echo json_encode([
+			'project' => $project,
+			'stats' => $stats,
+			'total_time_spent' => $totalTimeSpent,
+			'hours' => $project['hours'],
+		]);
 	} else {
 		http_response_code(500);
 		echo json_encode(['error' => 'Ошибка при обновлении проекта']);
