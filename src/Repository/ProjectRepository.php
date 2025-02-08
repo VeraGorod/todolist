@@ -13,11 +13,13 @@ class ProjectRepository
 		$stmt = $this->pdo->query("SELECT p.*, 
                s.value AS size_value,
                l.value AS level_value,
-               c.value AS color_value
+               c.value AS color_value,
+               e.value AS status_value
         FROM projects p
         LEFT JOIN lists s ON p.size_id = s.id
         LEFT JOIN lists l ON p.level_id = l.id
-        LEFT JOIN lists c ON p.color_id = c.id");
+        LEFT JOIN lists c ON p.color_id = c.id
+        LEFT JOIN lists e ON p.status_id = e.id");
 		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 

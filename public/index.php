@@ -44,7 +44,7 @@ if ($requestUri === '/tasks-table') {
 
 if ($requestUri === '/projects-table') {
 	// Получение данных о проектах
-	$projects = $projectService->getAllProjects();
+	$projects = $projectService->getSortedProjects();
 	ob_start();
 	include __DIR__ . '/../templates/projects-table.php';
 	$content = ob_get_clean();

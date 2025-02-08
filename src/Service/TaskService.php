@@ -22,7 +22,7 @@ class TaskService
 	 */
 	public function getAllTasks(): array
 	{
-		$tasks = $this->taskRepository->getSortedTasks();
+		$tasks = $this->getSortedTasks();
 		foreach ($tasks as &$task) {
 			$task['domains'] = $this->taskRepository->findTaskLists($task['id']);
 			$task['contexts'] = $this->taskRepository->findTaskContexts($task['id']);
@@ -108,7 +108,7 @@ class TaskService
 
 	public function getTasksWithAttempts(): array
 	{
-		$tasks = $this->taskRepository->getSortedTasks();
+		$tasks = $this->getSortedTasks();
 		foreach ($tasks as &$task) {
 			// Получаем количество сделанных подходов
 			$task['attempts_count'] = $this->attemptRepository->countByTaskId($task['id']);
@@ -203,5 +203,38 @@ class TaskService
 		}
 
 		return $stats;
+	}
+
+	/**
+	 * Получить все задачи, отсортированные по статусу.
+	 *
+	 * @return array
+	 */
+	public function getSortedTasks(): array
+	{
+		$tasks = $this->taskRepository->findAll();
+
+		// Маппинг статусов
+		$statusMapping = [
+			'Для обезьянки' => ['class' => 'status-for-monkey', 'priority' => 1],
+			'Делается' => ['class' => 'status-in-progress', 'priority' => 2],
+			'Обработать' => ['class' => 'status-on-hold', 'priority' => 3],
+			'Заморозка' => ['class' => 'status-frozen', 'priority' => 4],
+			'Готово' => ['class' => 'status-done', 'priority' => 5],
+		];
+
+		// Сортируем задачи по приоритету статуса
+		usort($tasks, function ($a, $b) use ($statusMapping) {
+			$priorityA = $statusMapping[$a['status_value']]['priority'] ?? 999; // По умолчанию низкий приоритет
+			$priorityB = $statusMapping[$b['status_value']]['priority'] ?? 999;
+			return $priorityA <=> $priorityB;
+		});
+
+		// Добавляем CSS-классы к задачам
+		foreach ($tasks as &$task) {
+			$task['status_class'] = $statusMapping[$task['status_value']]['class'] ?? '';
+		}
+
+		return $tasks;
 	}
 }

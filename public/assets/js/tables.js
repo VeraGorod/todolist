@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const value = e.target.textContent.trim();
 
             // Отправляем данные на сервер
-            const response = await fetch(`/api/update/${row.tagName.toLowerCase() === 'tr' ? 'tasks' : 'projects'}/${id}`, {
+            const response = await fetch(`/api/update/${row.className.indexOf('task') !== -1 ? 'tasks' : 'projects'}/${id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

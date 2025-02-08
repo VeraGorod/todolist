@@ -21,34 +21,6 @@ class TaskRepository
 		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 
-	/**
-	 * Получить все задачи, отсортированные по статусу.
-	 *
-	 * @return array
-	 */
-	public function getSortedTasks(): array
-	{
-		$tasks = $this->findAll();
-
-		// Определяем приоритеты для статусов
-		$statusPriority = [
-			'Для обезьянки' => 1,
-			'Делается' => 2,
-			'Обработать' => 3,
-			'Заморозка' => 4,
-			'Готово' => 5,
-		];
-
-		// Сортируем задачи по приоритету статуса
-		usort($tasks, function ($a, $b) use ($statusPriority) {
-			$priorityA = $statusPriority[$a['status_value']] ?? 999; // По умолчанию низкий приоритет
-			$priorityB = $statusPriority[$b['status_value']] ?? 999;
-			return $priorityA <=> $priorityB;
-		});
-
-		return $tasks;
-	}
-
 	public function save(array $data): int
 	{
 		$sql = "INSERT INTO tasks (name, project_id, context_id, target_attempts, time_per_attempt, total_time, status_id, color_id, external_link)

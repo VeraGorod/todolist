@@ -34,6 +34,35 @@ class ProjectService
 		}
 		return $projects;
 	}
+
+	public function getSortedProjects(): array
+	{
+		$projects = $this->getAllProjects();
+
+		// Маппинг статусов
+		$statusMapping = [
+			'Для обезьянки' => ['class' => 'status-for-monkey', 'priority' => 1],
+			'Делаю' => ['class' => 'status-in-progress', 'priority' => 2],
+			'Обработать' => ['class' => 'status-on-hold', 'priority' => 3],
+			'Заморожено' => ['class' => 'status-frozen', 'priority' => 4],
+			'Готово' => ['class' => 'status-done', 'priority' => 5],
+		];
+
+		// Сортируем задачи по приоритету статуса
+		usort($projects, function ($a, $b) use ($statusMapping) {
+			$priorityA = $statusMapping[$a['status_value']]['priority'] ?? 999; // По умолчанию низкий приоритет
+			$priorityB = $statusMapping[$b['status_value']]['priority'] ?? 999;
+			return $priorityA <=> $priorityB;
+		});
+
+		// Добавляем CSS-классы к задачам
+		foreach ($projects as &$project) {
+			$project['status_class'] = $statusMapping[$project['status_value']]['class'] ?? '';
+		}
+
+		return $projects;
+	}
+
 	/**
 	 * Получить все проекты с прогрессом и фактическим временем.
 	 *

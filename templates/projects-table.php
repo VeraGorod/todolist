@@ -13,6 +13,7 @@
 	<tr>
 		<th>ID</th>
 		<th>Название</th>
+		<th>Статус</th>
 		<th>Внешняя ссылка</th>
 		<th>Сферы (ID | Value)</th>
 		<th>Цвет</th>
@@ -23,9 +24,10 @@
 	</thead>
 	<tbody>
 	<?php foreach ($projects as $project): ?>
-		<tr>
-			<td data-id="<?= htmlspecialchars($project['id']) ?>"><?= htmlspecialchars($project['id']) ?></td>
+		<tr data-id="<?= htmlspecialchars($project['id']) ?>">
+			<td ><?= htmlspecialchars($project['id']) ?></td>
 			<td contenteditable="true" class="editable" data-field="name"><?= htmlspecialchars($project['name']) ?></td>
+			<td contenteditable="true" class="" data-field="status"><?= htmlspecialchars($project['status_value']) ?></td>
 			<td contenteditable="true" class="editable" data-field="external_link"><?= htmlspecialchars($project['external_link']) ?></td>
 			<td>
 				<?php foreach ($project['domains'] as $domain): ?>
