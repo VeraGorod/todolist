@@ -53,26 +53,45 @@
                     <div class="mb-3">
                         <label for="edit-project-level" class="form-label">Уровень сложности</label>
                         <select class="form-select" id="edit-project-level" name="level">
-                            <option value="beginner">Начинающий</option>
-                            <option value="intermediate">Средний</option>
-                            <option value="advanced">Продвинутый</option>
+                            <option>Выберите уровень</option>
+							<?php foreach ($listsByType['project_levels'] as $item): ?>
+                                <option value="<?= htmlspecialchars($item['id']) ?>"><?= htmlspecialchars($item['value']) ?></option>
+							<?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="edit-project-domains" class="form-label">Сферы жизни</label>
                         <select class="form-select" id="edit-project-domains" name="domains[]" multiple>
-                            <option value="work">Работа</option>
-                            <option value="health">Здоровье</option>
-                            <option value="family">Семья</option>
-                            <option value="personal_growth">Личностный рост</option>
+							<?php foreach ($listsByType['domains'] as $domain): ?>
+                                <option value="<?= $domain['id'] ?>"><?= htmlspecialchars($domain['value']) ?></option>
+							<?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="edit-project-size" class="form-label">Размер</label>
                         <select class="form-select" id="edit-project-size" name="size">
-                            <option value="small">Маленький</option>
-                            <option value="medium">Средний</option>
-                            <option value="large">Большой</option>
+                            <option>Выберите размер</option>
+							<?php foreach ($listsByType['project_sizes'] as $item): ?>
+                                <option value="<?= htmlspecialchars($item['id']) ?>"><?= htmlspecialchars($item['value']) ?></option>
+							<?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-project-size" class="form-label">Статус</label>
+                        <select class="form-select" id="edit-project-status" name="status">
+                            <option>Выберите статус</option>
+							<?php foreach ($listsByType['project_statuses'] as $item): ?>
+                                <option value="<?= htmlspecialchars($item['id']) ?>"><?= htmlspecialchars($item['value']) ?></option>
+							<?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-project-color" class="form-label">Цвет</label>
+                        <select class="form-select" id="edit-project-color" name="color">
+                            <option>Выберите цвет</option>
+							<?php foreach ($listsByType['colors'] as $item): ?>
+                                <option value="<?= htmlspecialchars($item['id']) ?>"><?= htmlspecialchars($item['value']) ?></option>
+							<?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">

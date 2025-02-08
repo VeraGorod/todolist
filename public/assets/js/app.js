@@ -1,4 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    const taskSelect = document.getElementById('project-select');
+    let choicesInstance = null;
+
+    // Инициализация Choices.js
+    function initializeChoices() {
+        if (choicesInstance) {
+            choicesInstance.destroy(); // Уничтожаем предыдущий экземпляр
+        }
+        choicesInstance = new Choices(taskSelect, {
+            searchEnabled: true,
+            placeholder: true,
+            placeholderValue: 'Выберите проект...',
+            noResultsText: 'Нет результатов',
+        });
+    }
+
+    initializeChoices();
+
     // Обновление прогресса после сохранения
     const updateProgressBar = (element, progressPercent) => {
         const progressBar = element.querySelector('.progress-bar');
@@ -142,16 +161,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     const task = await response.json();
                     document.getElementById('task-id').value = task.id;
                     document.getElementById('edit-task-name').value = task.name;
-                    document.getElementById('edit-task-status').value = task.status;
+                    if(task.project_id) choicesInstance.setChoiceByValue(task.project_id);;
+                    if(task.status_id) document.getElementById('edit-task-status').value = task.status_id;
+                    if(task.color_id) document.getElementById('edit-task-color').value = task.color_id;
                     document.getElementById('edit-task-target-attempts').value = task.target_attempts || 1;
                     document.getElementById('edit-task-time-per-attempt').value = task.time_per_attempt || 0;
 
                     // Заполняем множественный выбор сфер жизни
                     const domainsSelect = document.getElementById('edit-task-domains');
-                    domainsSelect.value = task.domains ? JSON.parse(task.domains) : [];
-
+                    Array.from(domainsSelect.options).forEach(option => {
+                        if ((task.domains ? task.domains : []).includes(option.value)) {
+                            option.selected = true;
+                        }
+                    });
                     // Заполняем цвет
-                    document.getElementById('edit-task-color').value = task.color || 'default';
                 }
             });
         });
@@ -159,28 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Инициализация обработчиков событий
     attachEventListeners();
-
-
-    // Редактирование дела
-    document.querySelectorAll('.edit-task-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-            const taskId = button.closest('.list-group-item').dataset.id;
-            const response = await fetch(`/api/tasks/${taskId}`);
-            if (response.ok) {
-                const task = await response.json();
-                document.getElementById('task-id').value = task.id;
-                document.getElementById('edit-task-name').value = task.name;
-                document.getElementById('edit-task-status').value = task.status;
-
-                // Заполняем выпадающий список проектов
-                const projectSelect = document.getElementById('edit-task-project');
-                projectSelect.value = task.project_id || ''; // Если проект не указан, выбирается пустое значение
-
-                document.getElementById('edit-task-target-attempts').value = task.target_attempts || 1;
-                document.getElementById('edit-task-time-per-attempt').value = task.time_per_attempt || 0;
-            }
-        });
-    });
 
 // Сохранение изменений дела
     const editTaskForm = document.getElementById('edit-task-form');
@@ -195,18 +196,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     id: taskId,
                     name: formData.get('name'),
-                    status: formData.get('status'),
+                    status_id: formData.get('status'),
+                    color_id: formData.get('color'),
                     domains: Array.from(formData.getAll('domains[]')),
-                    projectId: formData.get('projectId') || null, // Если проект не выбран, отправляем null
+                    project_id: formData.get('projectId') || null, // Если проект не выбран, отправляем null
                     targetAttempts: parseInt(formData.get('targetAttempts'), 10),
                     timePerAttempt: parseInt(formData.get('timePerAttempt'), 10),
                 }),
             });
             if (response.ok) {
                 const updatedTask = await response.json();
-                const taskElement = document.querySelector(`.list-group-item[data-id="${updatedTask.id}"]`);
-                taskElement.querySelector('.task-name').textContent = updatedTask.name;
-                updateProgressBar(taskElement, updatedTask.progress_percent);
+                const taskElement = document.querySelector(`.list-group-item[data-id="${updatedTask.task.id}"]`);
+                taskElement.querySelector('.task-name').textContent = updatedTask.task.name;
+                updateProgressBar(taskElement, updatedTask.task.progress_percent);
                 bootstrap.Modal.getInstance(document.getElementById('edit-task-modal')).hide();
             } else {
                 alert('Ошибка при обновлении дела');
@@ -224,14 +226,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const project = await response.json();
                 document.getElementById('project-id').value = project.id;
                 document.getElementById('edit-project-name').value = project.name;
-                document.getElementById('edit-project-level').value = project.level;
+                if(project.level_id) document.getElementById('edit-project-level').value = project.level_id;
 
                 // Заполняем множественный выбор сфер жизни
                 const domainsSelect = document.getElementById('edit-project-domains');
-                domainsSelect.value = project.domains ? JSON.parse(project.domains) : [];
+                Array.from(domainsSelect.options).forEach(option => {
+                    if ((project.domains ? project.domains : []).includes(option.value)) {
+                        option.selected = true;
+                    }
+                });
 
                 // Заполняем размер
-                document.getElementById('edit-project-size').value = project.size || 'medium';
+                if(project.size_id) document.getElementById('edit-project-size').value = project.size_id;// Заполняем размер
+
+                if(project.status_id) document.getElementById('edit-project-status').value = project.status_id;
+                if(project.color_id) document.getElementById('edit-project-color').value = project.color_id;
 
                 // Заполняем часы
                 document.getElementById('edit-project-hours').value = project.hours || 0;
@@ -252,9 +261,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     id: projectId,
                     name: formData.get('name'),
-                    level: formData.get('level'),
+                    level_id: formData.get('level'),
                     domains: Array.from(formData.getAll('domains[]')),
-                    size: formData.get('size'),
+                    size_id: formData.get('size'),
+                    status_id: formData.get('status'),
+                    color_id: formData.get('color'),
                     hours: parseInt(formData.get('hours'), 10),
                 }),
             });
@@ -425,5 +436,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
     });

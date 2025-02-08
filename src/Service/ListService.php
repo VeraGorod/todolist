@@ -58,6 +58,7 @@ class ListService
 		$lists = $this->repository->findAll();
 		$groupedLists = [];
 		foreach ($lists as $list) {
+
 			$groupedLists[$list['type']][] = $list;
 		}
 		return $groupedLists;

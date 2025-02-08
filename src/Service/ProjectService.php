@@ -2,6 +2,7 @@
 namespace App\Service;
 
 use App\Repository\AttemptRepository;
+use App\Repository\ListRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
 
@@ -15,17 +16,23 @@ class ProjectService
 	public function __construct(
 		ProjectRepository $projectRepository,
 		TaskRepository $taskRepository,
-		AttemptRepository $attemptRepository
+		AttemptRepository $attemptRepository,
+		ListRepository $listRepository
 	) {
 		$this->projectRepository = $projectRepository;
 		$this->taskRepository = $taskRepository;
 		$this->attemptRepository = $attemptRepository;
-		$this->taskService = new TaskService($taskRepository, $attemptRepository);
+		$this->listRepository = $listRepository;
+		$this->taskService = new TaskService($taskRepository, $attemptRepository, $listRepository);
 	}
 
 	public function getAllProjects(): array
 	{
-		return $this->projectRepository->findAll();
+		$projects = $this->projectRepository->findAll();
+		foreach ($projects as &$project) {
+			$project['domains'] = $this->projectRepository->findProjectDomains($project['id']);
+		}
+		return $projects;
 	}
 	/**
 	 * Получить все проекты с прогрессом и фактическим временем.
@@ -36,6 +43,7 @@ class ProjectService
 	{
 		$projects = $this->projectRepository->findAll();
 		foreach ($projects as &$project) {
+			$project['domains'] = $this->projectRepository->findProjectLists($project['id']);
 			$project['progress_percent'] = $this->calculateProjectProgress($project);
 			$project['total_time_spent'] = $this->calculateTotalTimeSpent($project['id']);
 		}
@@ -111,21 +119,12 @@ class ProjectService
 	 */
 	public function getDomainStats(): array
 	{
-		$domains = ['work', 'health', 'family', 'personal_growth'];
+		$domains = $this->listRepository->getDomains(); // Получаем все сферы из базы
 		$stats = [];
 
 		foreach ($domains as $domain) {
 			// Проекты в сфере
-			$projectsInDomain = array_filter($this->projectRepository->findAll(), function ($project) use ($domain) {
-				$domains = trim($project['domains'], '"'); // Удаляем внешние кавычки
-				$domains = stripslashes($domains); // Удаляем лишние слэши
-				$decodedDomains = json_decode($domains, true);
-				// Проверяем, что результат декодирования — это массив
-				if (!is_array($decodedDomains) || empty($decodedDomains)) {
-					return false;
-				}
-				return in_array($domain, $decodedDomains);
-			});
+			$projectsInDomain = $this->projectRepository->findProjectsByDomain($domain['id']);
 			$plannedHours = 0;
 			$spentHours = 0;
 
@@ -135,27 +134,29 @@ class ProjectService
 			}
 
 			// Дела без проекта в сфере
-			$tasksWithoutProject = array_filter($this->taskRepository->findAll(), function ($task) use ($domain) {
-				return $task['project_id'] === null && in_array($domain, json_decode($task['domains'], true));
-			});
-
+			$tasksWithoutProject = $this->taskRepository->findTasksByDomainAndNoProject($domain['id']);
 			foreach ($tasksWithoutProject as $task) {
 				$attemptsCount = $this->attemptRepository->countByTaskId($task['id']);
 				$timePerAttempt = $task['time_per_attempt'];
+				$targetAttempts = $task['target_attempts'];
 				$spentHours += ($attemptsCount * $timePerAttempt) / 60; // В часах
+				$plannedHours += ($targetAttempts * $timePerAttempt) / 60;;
 			}
 
+
+			// Расчет процента прогресса
 			$progressPercent = $plannedHours > 0
 				? round(($spentHours / $plannedHours) * 100, 2)
 				: 0;
 
-			$stats[$domain] = [
+
+
+			$stats[$domain['value']] = [
 				'planned_hours' => $plannedHours,
 				'spent_hours' => round($spentHours, 1),
 				'progress_percent' => $progressPercent,
 			];
 		}
-
 		return $stats;
 	}
 
@@ -166,7 +167,7 @@ class ProjectService
 	 */
 	public function getDomainStatsWithPercentages(): array
 	{
-		$domains = ['work', 'health', 'family', 'personal_growth'];
+		$domains = $this->listRepository->getDomains(); // Получаем все сферы из базы
 		$stats = [];
 		$totalPlannedHours = 0;
 
@@ -177,14 +178,7 @@ class ProjectService
 
 		foreach ($domains as $domain) {
 			// Проекты в сфере
-			$projectsInDomain = array_filter($this->projectRepository->findAll(), function ($project) use ($domain) {
-				$domains = trim($project['domains'], '"');
-				$domains = stripslashes($domains);
-				$decodedDomains = json_decode($domains, true);
-				return is_array($decodedDomains) && in_array($domain, $decodedDomains);
-			});
-
-
+			$projectsInDomain = $this->projectRepository->findProjectsByDomain($domain['id']);
 			$plannedHours = 0;
 			$spentHours = 0;
 
@@ -194,19 +188,16 @@ class ProjectService
 			}
 
 			// Дела без проекта в сфере
-			$tasksWithoutProject = array_filter($this->taskRepository->findAll(), function ($task) use ($domain) {
-				$domains = trim($task['domains'], '"');
-				$domains = stripslashes($domains);
-				$decodedDomains = json_decode($domains, true);
-				return is_array($decodedDomains) && in_array($domain, $decodedDomains) && $task['project_id'] === null;
-			});
-
+			$tasksWithoutProject = $this->taskRepository->findTasksByDomainAndNoProject($domain['id']);
 			foreach ($tasksWithoutProject as $task) {
 				$attemptsCount = $this->attemptRepository->countByTaskId($task['id']);
 				$timePerAttempt = $task['time_per_attempt'];
+				$targetAttempts = $task['target_attempts'];
 				$spentHours += ($attemptsCount * $timePerAttempt) / 60; // В часах
+				$plannedHours += ($targetAttempts * $timePerAttempt) / 60;;
 			}
 
+			// Расчет процентов
 			$progressPercent = $plannedHours > 0
 				? round(($spentHours / $plannedHours) * 100, 2)
 				: 0;
@@ -220,15 +211,31 @@ class ProjectService
 				? round((100 / $domainPercentage) * 10)
 				: 10;
 
-			$stats[$domain] = [
+
+			if($squareSize > 500) $squareSize = 150;
+
+			if ($domainPercentage > 0){
+				// Расчет количества квадратиков
+				$squarePercentage = 100 / $domainPercentage; // Процент, который занимает один квадратик
+				$fullSquares = floor($progressPercent / $squarePercentage); // Количество полностью заполненных квадратиков
+				if($squarePercentage > 0){
+					$remainder = $progressPercent % ceil($squarePercentage); // Остаток для последнего квадратика
+					$remainder = round($remainder / ceil($squarePercentage) * 100, 2);
+				}
+				else $remainder = 0;
+			}
+
+
+			$stats[$domain['value']] = [
 				'planned_hours' => $plannedHours,
 				'spent_hours' => round($spentHours, 1),
 				'progress_percent' => $progressPercent,
 				'domain_percentage' => $domainPercentage,
+				'full_squares' => $fullSquares ?? 0, // Количество полностью заполненных квадратиков
 				'square_size' => $squareSize, // Размер квадратика
+				'remainder' => $remainder ?? 0, // Процент заполнения последнего квадратика
 			];
 		}
-
 
 		return $stats;
 	}

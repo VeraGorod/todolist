@@ -15,3 +15,15 @@ RewriteRule ^api/projects$ api/projects.php [L]
 RewriteRule ^api/attempts$ api/attempts.php [L]
 
 RewriteRule ^settings$ settings.php [L]
+
+# Перенаправление /tasks-table на /tasks-table.php
+RewriteRule ^tasks-table$ index.php [L]
+# Перенаправление /projects-table на /projects-table.php
+RewriteRule ^projects-table$ index.php [L]
+
+
+# Перенаправление /api/update/tasks/:id на /api/tasks.php?id=:id
+RewriteRule ^api/update/tasks/([0-9]+)$ api/tasks.php?id=$1 [L]
+
+# Перенаправление /api/update/projects/:id на /api/projects.php?id=$1
+RewriteRule ^api/update/projects/([0-9]+)$ api/projects.php?id=$1 [L]

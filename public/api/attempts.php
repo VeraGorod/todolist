@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		: 0;
 
 	// Возвращаем данные о задаче
-	$projectService = new \App\Service\ProjectService(new \App\Repository\ProjectRepository($database->getPdo()), new TaskRepository($database->getPdo()), new \App\Repository\AttemptRepository($database->getPdo()));
+	$projectService = new \App\Service\ProjectService(new \App\Repository\ProjectRepository($database->getPdo()), new TaskRepository($database->getPdo()), new \App\Repository\AttemptRepository($database->getPdo()), new \App\Repository\ListRepository($database->getPdo()));
 	$stats = $projectService->recalculateAllStats();
 	echo json_encode([
 		'attempt' => $repository->findById($attemptId),

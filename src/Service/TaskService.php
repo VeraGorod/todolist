@@ -3,14 +3,16 @@ namespace App\Service;
 
 use App\Entity\Task;
 use App\Repository\AttemptRepository;
+use App\Repository\ListRepository;
 use App\Repository\TaskRepository;
 
 class TaskService
 {
-	public function __construct(TaskRepository $taskRepository, AttemptRepository $attemptRepository)
+	public function __construct(TaskRepository $taskRepository, AttemptRepository $attemptRepository, ListRepository $listRepository)
 	{
 		$this->taskRepository = $taskRepository;
 		$this->attemptRepository = $attemptRepository;
+		$this->listRepository = $listRepository;
 	}
 
 	/**
@@ -20,7 +22,12 @@ class TaskService
 	 */
 	public function getAllTasks(): array
 	{
-		return $this->taskRepository->findAll();
+		$tasks = $this->taskRepository->getSortedTasks();
+		foreach ($tasks as &$task) {
+			$task['domains'] = $this->taskRepository->findTaskLists($task['id']);
+			$task['contexts'] = $this->taskRepository->findTaskContexts($task['id']);
+		}
+		return $tasks;
 	}
 
 	/**
@@ -56,7 +63,7 @@ class TaskService
 			$data['externalLink']
 		);
 
-		return $this->repository->save($task);
+		return $this->taskRepository->save($task);
 	}
 
 	/**
@@ -101,7 +108,7 @@ class TaskService
 
 	public function getTasksWithAttempts(): array
 	{
-		$tasks = $this->taskRepository->findAll();
+		$tasks = $this->taskRepository->getSortedTasks();
 		foreach ($tasks as &$task) {
 			// Получаем количество сделанных подходов
 			$task['attempts_count'] = $this->attemptRepository->countByTaskId($task['id']);
@@ -162,34 +169,34 @@ class TaskService
 	 */
 	public function getTodayDomainStats(): array
 	{
-		$today = date('Y-m-d');
-		$domains = ['work', 'health', 'family', 'personal_growth'];
+		$today = date('Y-m-d'); // Текущая дата
+		$domains = $this->listRepository->getDomains(); // Получаем все сферы из базы
 		$stats = [];
 
 		foreach ($domains as $domain) {
-			$tasksInDomain = array_filter($this->taskRepository->findAll(), function ($task) use ($domain) {
-				$domains = trim($task['domains'], '"'); // Удаляем внешние кавычки
-				$domains = stripslashes($domains); // Удаляем лишние слэши
-				$decodedDomains = json_decode($domains, true);
-				// Проверяем, что результат декодирования — это массив
-				if (!is_array($decodedDomains)) {
-					return false;
-				}
-				return in_array($domain, $decodedDomains);
-			});
+			// Выборка задач, связанных с текущей сферой
+			$tasksInDomain = $this->taskRepository->findTasksByDomain($domain['id']);
 
 			$totalTimeToday = 0;
 
 			foreach ($tasksInDomain as $task) {
-				$attemptsToday = array_filter($this->attemptRepository->findByTaskId($task['id']), function ($attempt) use ($today) {
-					return substr($attempt['date'], 0, 10) === $today;
-				});
+				// Выборка подходов для задачи за сегодня
+				$attemptsToday = array_filter(
+					$this->attemptRepository->findByTaskId($task['id']),
+					function ($attempt) use ($today) {
+						return substr($attempt['date'], 0, 10) === $today;
+					}
+				);
 
+				// Суммируем время за сегодня
 				$totalTimeToday += count($attemptsToday) * $task['time_per_attempt'];
 			}
 
+			// Переводим время в часы
 			$totalTimeTodayInHours = round($totalTimeToday / 60, 1);
-			$stats[$domain] = [
+
+			// Формируем статистику для текущей сферы
+			$stats[$domain['value']] = [
 				'time_today' => $totalTimeTodayInHours,
 				'progress_percent' => $totalTimeTodayInHours > 0 ? 100 : 0,
 			];

@@ -14,7 +14,8 @@
         <!-- Список дел -->
         <div id="tasks-list">
 			<?php foreach ($tasks as $task): ?>
-                <div class="list-group-item task-item d-flex justify-content-between align-items-center position-relative" data-id="<?= htmlspecialchars($task['id']) ?>">
+                <div class="list-group-item task-item d-flex justify-content-between align-items-center position-relative <?= htmlspecialchars(strtolower(str_replace(' ', '-', $task['status_value']))) ?>" data-id="<?= htmlspecialchars($task['id']) ?>" data-status="<?= htmlspecialchars($task['status_value']) ?>">
+
                     <!-- Прогресс -->
                     <div class="progress-container position-absolute top-0 start-0 bottom-0">
                         <div class="progress-bar" style="width: <?= htmlspecialchars($task['progress_percent']) ?>%;"></div>
@@ -62,38 +63,40 @@
                     <div class="mb-3">
                         <label for="edit-task-status" class="form-label">Статус</label>
                         <select class="form-select" id="edit-task-status" name="status">
-                            <option value="new">Новое</option>
-                            <option value="in_progress">В процессе</option>
-                            <option value="completed">Завершено</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit-task-project" class="form-label">Проект</label>
-                        <select class="form-select" id="edit-task-project" name="projectId">
-                            <option value="">Без проекта</option>
-							<?php foreach ($projects as $project): ?>
-                                <option value="<?= htmlspecialchars($project['id']) ?>">
-									<?= htmlspecialchars($project['name']) ?>
-                                </option>
+                            <option>Выберите статус</option>
+							<?php foreach ($listsByType['statuses'] as $item): ?>
+                                <option value="<?= htmlspecialchars($item['id']) ?>"><?= htmlspecialchars($item['value']) ?></option>
 							<?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
+                        <div class="form-group">
+                            <label for="project-select">Проект:</label>
+                            <select id="project-select" name="project_id" class="form-control" style="width: 100%;">
+                                <option value="">Выберите проект</option>
+								<?php foreach ($projects as $project): ?>
+                                    <option value="<?= htmlspecialchars($project['id']) ?>">
+										<?= htmlspecialchars($project['name']) ?>
+                                    </option>
+								<?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
                         <label for="edit-task-domains" class="form-label">Сферы жизни</label>
                         <select class="form-select" id="edit-task-domains" name="domains[]" multiple>
-                            <option value="work">Работа</option>
-                            <option value="health">Здоровье</option>
-                            <option value="family">Семья</option>
-                            <option value="personal_growth">Личностный рост</option>
+							<?php foreach ($listsByType['domains'] as $domain): ?>
+                                <option value="<?= $domain['id'] ?>"><?= htmlspecialchars($domain['value']) ?></option>
+							<?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="edit-task-color" class="form-label">Цвет</label>
                         <select class="form-select" id="edit-task-color" name="color">
-                            <option value="default">По умолчанию</option>
-                            <option value="red">Красный</option>
-                            <option value="blue">Синий</option>
-                            <option value="green">Зеленый</option>
+                            <option>Выберите цвет</option>
+							<?php foreach ($listsByType['colors'] as $item): ?>
+                                <option value="<?= htmlspecialchars($item['id']) ?>"><?= htmlspecialchars($item['value']) ?></option>
+							<?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">

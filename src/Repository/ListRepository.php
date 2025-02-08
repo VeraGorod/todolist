@@ -66,4 +66,11 @@ class ListRepository
 		$stmt = $this->pdo->query("SELECT * FROM lists ORDER BY type, name");
 		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
+
+	public function getDomains(): array
+	{
+		$stmt = $this->pdo->prepare("SELECT id, value FROM lists WHERE type = 'domains'");
+		$stmt->execute();
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
 }

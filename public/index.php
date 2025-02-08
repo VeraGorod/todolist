@@ -21,10 +21,37 @@ $pdo = $database->getPdo();
 $projectRepository = new ProjectRepository($pdo);
 $taskRepository = new TaskRepository($pdo);
 $attemptRepository = new AttemptRepository($pdo);
+$listRepository = new \App\Repository\ListRepository($pdo);
 
 // Initialize services
-$projectService = new \App\Service\ProjectService($projectRepository, $taskRepository, $attemptRepository);
-$taskService = new TaskService($taskRepository, $attemptRepository); // Inject AttemptRepository here
+$projectService = new \App\Service\ProjectService($projectRepository, $taskRepository, $attemptRepository,$listRepository);
+$taskService = new TaskService($taskRepository, $attemptRepository, $listRepository); // Inject AttemptRepository here
+$listService = new \App\Service\ListService($listRepository);
+
+
+// Определение маршрута
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+if ($requestUri === '/tasks-table') {
+	// Получение данных о делах
+	$tasks = $taskService->getAllTasks();
+	ob_start();
+	include __DIR__ . '/../templates/tasks-table.php';
+	$content = ob_get_clean();
+	echo $content;
+	exit;
+}
+
+if ($requestUri === '/projects-table') {
+	// Получение данных о проектах
+	$projects = $projectService->getAllProjects();
+	ob_start();
+	include __DIR__ . '/../templates/projects-table.php';
+	$content = ob_get_clean();
+	echo $content;
+	exit;
+}
+
 
 // Получение данных
 $projects = $projectService->getAllProjectsWithProgress();
@@ -35,9 +62,11 @@ foreach ($projects as &$project) {
 	$project['progress_percent'] = $projectService->calculateProjectProgress($project);
 }
 
+// Группировка списков по типам
+$listsByType = $listService->getAll();
+
 // Общая статистика
 $totalProjectStats = $projectService->getTotalProjectStats();
-$domainStats = $projectService->getDomainStats();
 $todayStats = $taskService->getTodayStats();
 $todayDomainStats = $taskService->getTodayDomainStats();
 
