@@ -25,12 +25,12 @@ class ProjectRepository
 
 	public function save(array $data): int
 	{
-		$sql = "INSERT INTO projects (name, external_link, size_id, level_id, hours, status_id, color_id)
-            VALUES (:name, :externalLink, :sizeId, :levelId, :hours, :statusId, :colorId)";
+		$sql = "INSERT INTO projects (name, external_link, size_id, level_id, hours, status_id, color_id, domains, color, size, level)
+            VALUES (:name, :externalLink, :sizeId, :levelId, :hours, :statusId, :colorId, '', '', '', '')";
 		$stmt = $this->pdo->prepare($sql);
 		$stmt->execute([
 			':name' => $data['name'],
-			':externalLink' => $data['externalLink'] ?? '',
+			':externalLink' => $data['external_link'] ?? '',
 			':sizeId' => $data['size_id'] ?? null,
 			':levelId' => $data['level_id'] ?? null,
 			':hours' => $data['hours'] ?? 0,
