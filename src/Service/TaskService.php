@@ -237,4 +237,17 @@ class TaskService
 
 		return $tasks;
 	}
+
+	/**
+	 * @param array $filteredProjectIds
+	 * @return array
+	 */
+	public function getTasksWithAttemptsByProjectIds(array $filteredProjectIds) : array
+	{
+		$tasks = $this->getTasksWithAttempts();
+		foreach ($tasks as $key => $task){
+			if(!in_array($task['project_id'], $filteredProjectIds) && !empty($task['project_id'])) unset($tasks[$key]);
+		}
+		return $tasks;
+	}
 }

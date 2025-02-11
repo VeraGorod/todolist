@@ -14,8 +14,27 @@
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
+
 <div class="container mt-4">
-    <h5>Статистика</h5>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link <?= isset($_GET['level']) && $_GET['level'] === 'Первая' ? 'active' : '' ?>" href="?level=Первая">Первый</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isset($_GET['level']) && $_GET['level'] === 'Вторая' ? 'active' : '' ?>" href="?level=Вторая">Второй</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isset($_GET['level']) && $_GET['level'] === 'Третья' ? 'active' : '' ?>" href="?level=Третья">Годовой</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= !isset($_GET['level']) || $_GET['level'] === 'all' ? 'active' : '' ?>" href="?level=all">Все</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <h5 class="mt-4">Статистика</h5>
     <div class="mb-3">
         <strong>Всего:</strong> <?= htmlspecialchars($totalProjectStats['spent_hours']) ?>/<?= htmlspecialchars($totalProjectStats['planned_hours']) ?> ч. (<?= htmlspecialchars($totalProjectStats['progress_percent']) ?>%)
     </div>
@@ -29,19 +48,24 @@
         Выполнено: <?= htmlspecialchars($totalProgressPercent) ?>%<br>
         Осталось: <?= htmlspecialchars(100 - $totalProgressPercent) ?>%
     </p>
-    <div class="mb-3">
-		<?php foreach ($domainStats as $domain => $stats): ?>
+    <!--<div class="mb-3">
+		<?php /*foreach ($domainStats as $domain => $stats): */?>
             <div>
-                <strong><?= ucfirst($domain) ?>:</strong> <?= htmlspecialchars($stats['spent_hours']) ?>/<?= htmlspecialchars($stats['planned_hours']) ?> ч. (<?= htmlspecialchars($stats['progress_percent']) ?>%)
+                <strong><?php /*= ucfirst($domain) */?>:</strong> <?php /*= htmlspecialchars($stats['spent_hours']) */?>/<?php /*= htmlspecialchars($stats['planned_hours']) */?> ч. (<?php /*= htmlspecialchars($stats['progress_percent']) */?>%)
             </div>
-		<?php endforeach; ?>
-    </div>
+		<?php /*endforeach; */?>
+    </div>-->
     <div class="mt-4">
         <h5>Статистика по сферам</h5>
         <div class="domain-stats">
-			<?php foreach ($domainStats as $domain => $stats): ?>
+			<?php foreach ($domainStats as $domain => $stats):
+				if($stats['planned_hours'] == 0) continue;?>
                 <div class="domain-stat">
-                    <strong><?= ucfirst($domain) ?>:</strong>
+                    <div class=""><strong><?= ucfirst($domain) ?>:</strong><span>&nbsp;&nbsp;&nbsp;&nbsp;<?= htmlspecialchars($stats['progress_percent']) ?>%</span></div>
+                    <p>
+                        <?= htmlspecialchars($stats['spent_hours']) ?> / <?= htmlspecialchars($stats['planned_hours']) ?> ч.<br>
+                        <!--Доля в общем: --><?php /*= htmlspecialchars($stats['domain_percentage']) */?>
+                    </p>
                     <div class="squares-container d-flex flex-wrap">
 							<?php for ($i = 0; $i < $stats['full_squares']; $i++): ?>
                                 <div class="square full" style="width: <?= htmlspecialchars($stats['square_size']) ?>px; height: <?= htmlspecialchars($stats['square_size']) ?>px;"></div>
@@ -56,10 +80,6 @@
                                 <div class="square empty" style="width: <?= htmlspecialchars($stats['square_size']) ?>px; height: <?= htmlspecialchars($stats['square_size']) ?>px;"></div>
 							<?php endfor; ?>
                     </div>
-                    <p>
-                        Выполнено: <?= htmlspecialchars($stats['spent_hours']) ?>/<?= htmlspecialchars($stats['planned_hours']) ?> ч. (<?= htmlspecialchars($stats['progress_percent']) ?>%)<br>
-                        Доля в общем: <?= htmlspecialchars($stats['domain_percentage']) ?>%
-                    </p>
                 </div>
 			<?php endforeach; ?>
         </div>
@@ -68,13 +88,15 @@
         <strong>Сегодня:</strong> <?= htmlspecialchars($todayStats['time_today']) ?> ч. (<?= htmlspecialchars($todayStats['progress_percent']) ?>%)
     </div>
     <div class="mb-3 today-domain-stats">
-		<?php foreach ($todayDomainStats as $domain => $stats): ?>
+		<?php foreach ($todayDomainStats as $domain => $stats):
+            if($stats['progress_percent'] == 0) continue;?>
             <div>
                 <strong><?= ucfirst($domain) ?>:</strong> <?= htmlspecialchars($stats['time_today']) ?> ч. (<?= htmlspecialchars($stats['progress_percent']) ?>%)
             </div>
 		<?php endforeach; ?>
     </div>
 </div>
+
 <div class="container mt-4">
     <h1 class="text-center">Мой Todo List</h1>
     <div class="row">

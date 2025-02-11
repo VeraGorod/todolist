@@ -43,6 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	$stats = $projectService->recalculateAllStats();
 	echo json_encode([
 		'attempt' => $repository->findById($attemptId),
+		'attempts_count' => $attemptsCount,
+		'target_attempts' => $targetAttempts,
+		'progress_percent' => $progressPercent,
 		'stats' => $stats,
 	]);
 	/*echo json_encode([

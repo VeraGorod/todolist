@@ -14,7 +14,7 @@
         <!-- Список дел -->
         <div id="tasks-list">
 			<?php foreach ($tasks as $task): ?>
-                <div class="list-group-item task-item d-flex justify-content-between align-items-center position-relative <?= htmlspecialchars($task['status_class']) ?>" data-status="<?= htmlspecialchars($task['status_value']) ?>">
+                <div class="list-group-item task-item d-flex justify-content-between align-items-center position-relative <?= htmlspecialchars($task['status_class']) ?>" data-status="<?= htmlspecialchars($task['status_value']) ?>" data-id="<?= htmlspecialchars($task['id']) ?>">
 
                     <!-- Прогресс -->
                     <div class="progress-container position-absolute top-0 start-0 bottom-0">

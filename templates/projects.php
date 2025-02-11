@@ -10,7 +10,6 @@
                 <button type="submit" class="btn btn-primary">Добавить</button>
             </div>
         </form>
-
         <!-- Список проектов -->
         <div id="projects-list">
 			<?php foreach ($projects as $project): ?>
@@ -20,7 +19,7 @@
                         <div class="progress-bar" style="width: <?= htmlspecialchars($project['progress_percent']) ?>%;"></div>
                     </div>
                     <div>
-                        <strong class="project-name"><?= htmlspecialchars($project['name']) ?></strong>
+                        <strong class="project-name"><?= htmlspecialchars($project['name']) ?></strong> <small><?= htmlspecialchars($project['actual_tasks']) ?> задач</small>
                         <!-- Часы (факт / план) -->
                         <small class="project-hours text-muted">
 							<?= htmlspecialchars($project['total_time_spent']) ?>/<?= htmlspecialchars($project['hours']) ?> ч
@@ -31,6 +30,7 @@
                     </button>
                 </div>
 			<?php endforeach; ?>
+
         </div>
     </div>
 </div>

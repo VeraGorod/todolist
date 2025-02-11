@@ -52,33 +52,41 @@ if ($requestUri === '/projects-table') {
 	exit;
 }
 
+// Получение уровня из GET-параметра
+$level = $_GET['level'] ?? 'all';
 
-// Получение данных
-$projects = $projectService->getAllProjectsWithProgress();
-$tasks = $taskService->getTasksWithAttempts();
+// Фильтрация проектов по уровню
+if ($level === 'all') {
+	$projects = $projectService->getAllProjectsWithProgress();
+	$tasks = $taskService->getTasksWithAttempts();
+} else {
+	$projects = $projectService->getProjectsByLevel($level);
+	$filteredProjectIds = array_column($projects, 'id');
+	$tasks = $taskService->getTasksWithAttemptsByProjectIds($filteredProjectIds);
+}
 
 // Добавляем прогресс к каждому проекту
 foreach ($projects as &$project) {
 	$project['progress_percent'] = $projectService->calculateProjectProgress($project);
 }
-
+unset($project);
 // Группировка списков по типам
 $listsByType = $listService->getAll();
 
 // Общая статистика
-$totalProjectStats = $projectService->getTotalProjectStats();
+$totalProjectStats = $projectService->getTotalProjectStats($level);
 $todayStats = $taskService->getTodayStats();
 $todayDomainStats = $taskService->getTodayDomainStats();
 
 // Общая статистика
 $totalProgressPercent = $totalProjectStats['progress_percent'];
 // Статистика по сферам
-$domainStats = $projectService->getDomainStatsWithPercentages();
+$domainStats = $projectService->getDomainStatsWithPercentages($level);
 
 // Подключение шаблонов
 ob_start();
-include __DIR__ . '/../templates/tasks.php';
-include __DIR__ . '/../templates/projects.php';
+//include __DIR__ . '/../templates/tasks.php';
+//include __DIR__ . '/../templates/projects.php';
 $content = ob_get_clean();
 
 // Вывод основного шаблона

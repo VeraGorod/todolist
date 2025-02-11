@@ -75,6 +75,7 @@ class ProjectService
 			$project['domains'] = $this->projectRepository->findProjectLists($project['id']);
 			$project['progress_percent'] = $this->calculateProjectProgress($project);
 			$project['total_time_spent'] = $this->calculateTotalTimeSpent($project['id']);
+			$project['actual_tasks'] = count($this->taskRepository->findActualByProjectId($project['id']));
 		}
 		return $projects;
 	}
@@ -117,11 +118,15 @@ class ProjectService
 	/**
 	 * Получить общую статистику по всем проектам.
 	 *
+	 * @param string|null $level
 	 * @return array
 	 */
-	public function getTotalProjectStats(): array
+	public function getTotalProjectStats(?string $level = null): array
 	{
-		$projects = $this->projectRepository->findAll();
+		if ($level && $level !== 'all') {
+			$projects = $this->getProjectsByLevel($level);
+		}
+		else $projects = $this->projectRepository->findAll();
 		$totalPlannedHours = 0;
 		$totalSpentHours = 0;
 
@@ -192,22 +197,31 @@ class ProjectService
 	/**
 	 * Получить статистику по сферам с учетом их доли в общем количестве часов.
 	 *
+	 * @param string|null $level
 	 * @return array
 	 */
-	public function getDomainStatsWithPercentages(): array
+	public function getDomainStatsWithPercentages(?string $level = null): array
 	{
 		$domains = $this->listRepository->getDomains(); // Получаем все сферы из базы
 		$stats = [];
 		$totalPlannedHours = 0;
 
+		if ($level && $level !== 'all') {
+			$projects = $this->getProjectsByLevel($level);
+		}
+		else $projects = $this->projectRepository->findAll();
+
 		// Считаем общее количество запланированных часов
-		foreach ($this->projectRepository->findAll() as $project) {
+		foreach ($projects as $project) {
 			$totalPlannedHours += $project['hours'];
 		}
 
 		foreach ($domains as $domain) {
 			// Проекты в сфере
-			$projectsInDomain = $this->projectRepository->findProjectsByDomain($domain['id']);
+			if ($level && $level !== 'all') {
+				$projectsInDomain = $this->projectRepository->findProjectsByDomainAndLevel($domain['id'], $level);
+			}
+			else $projectsInDomain = $this->projectRepository->findProjectsByDomain($domain['id']);
 			$plannedHours = 0;
 			$spentHours = 0;
 
@@ -241,7 +255,7 @@ class ProjectService
 				: 10;
 
 
-			if($squareSize > 500) $squareSize = 150;
+			if($squareSize > 50) $squareSize = 50;
 
 			if ($domainPercentage > 0){
 				// Расчет количества квадратиков
@@ -292,6 +306,19 @@ class ProjectService
 			'today_stats' => $todayStats,
 			'today_domain_stats' => $todayDomainStats,
 		];
+	}
+
+	/**
+	 * @param mixed $level
+	 * @return array
+	 */
+	public function getProjectsByLevel(mixed $level) : array
+	{
+		$projects = $this->getAllProjectsWithProgress();
+		foreach ($projects as $key => $project){
+			if($project['level_value'] !== $level) unset($projects[$key]);
+		}
+		return $projects;
 	}
 
 

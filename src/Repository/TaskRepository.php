@@ -180,4 +180,21 @@ class TaskRepository
 		$stmt->execute([':taskId' => $taskId]);
 		return $stmt->fetchAll(PDO::FETCH_COLUMN);
 	}
+
+	/**
+	 * Вычислить фактически затраченное время на проект.
+	 *
+	 * @param int $projectId
+	 * @return array
+	 */
+	public function findActualByProjectId(int $projectId)
+	{
+		$statuses = ['Обработать', 'Для обезьянки', 'Делается'];
+		$statusesPlaceholder = implode(',', array_fill(0, count($statuses), '?'));
+		$stmt = $this->pdo->prepare("SELECT t.* FROM tasks t
+		JOIN lists l ON t.status_id = l.id WHERE l.value IN ($statusesPlaceholder) AND t.project_id = ? ");
+		$params = array_merge($statuses, [$projectId]);
+		$stmt->execute($params);
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
 }

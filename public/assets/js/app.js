@@ -139,10 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (response.ok) {
                     const updatedTask = await response.json();
-                    const taskElement = document.querySelector(`.list-group-item[data-id="${updatedTask.id}"]`);
+                    const taskElement = document.querySelector(`.list-group-item[data-id="${updatedTask.attempt.task_id}"]`);
 
                     // Обновляем счетчик подходов
-                    taskElement.querySelector('.attempts-count').textContent = `${updatedTask.attempts_count}/1`;
+                    let oldValue = taskElement.querySelector('.attempts-count').textContent;
+                    let targetAttempt = oldValue.split('/')[1];
+                    taskElement.querySelector('.attempts-count').textContent = `${updatedTask.attempts_count}/${targetAttempt}`;
 
                     // Обновляем ширину прогресса
                     taskElement.querySelector('.progress-bar').style.width = `${updatedTask.progress_percent}%`;

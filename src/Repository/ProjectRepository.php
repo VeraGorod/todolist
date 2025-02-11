@@ -128,6 +128,19 @@ class ProjectRepository
 		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 
+	public function findProjectsByDomainAndLevel(int $domainId, string|null $level): array
+	{
+		$stmt = $this->pdo->prepare("
+        SELECT p.*
+        FROM projects p
+        JOIN project_lists pl ON p.id = pl.project_id
+        JOIN lists l ON p.level_id = l.id
+        WHERE pl.list_id = :domainId AND l.value = :level
+    ");
+		$stmt->execute([':domainId' => $domainId, ':level' => $level]);
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
+
 	public function findProjectDomainsWithValues(int $projectId): array
 	{
 		$stmt = $this->pdo->prepare("
